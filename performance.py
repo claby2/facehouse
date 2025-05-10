@@ -2,19 +2,44 @@ import numpy as np
 import data
 
 
-def calculate_accuracy(patient: int):
-    dat = data.alldat[patient][1]  # Always do experiment 2
+def calculate_accuracy(
+    patient: int, min_noise: float = 0, max_noise: float = 100
+) -> float:
+    """
+    For experiment 2 only, compute overall percent correct
+    (hits + correct rejections) for trials whose noise%
+    lies between min_noise and max_noise (inclusive).
+    """
+    dat = data.alldat[patient][1]  # experiment 2
 
-    face_guesses = np.zeros(dat["stim_cat"].shape, dtype=bool)
-    for i in range(len(dat["stim_cat"])):
-        face_guesses[i] = np.any(
-            (dat["key_press"] >= dat["t_on"][i]) & (dat["key_press"] <= dat["t_off"][i])
-        )
-    accuracy = np.sum((dat["stim_cat"] == 2) & face_guesses) / len(face_guesses)
-    return accuracy
+    stim_cat = dat["stim_cat"].squeeze()
+    stim_noise = dat["stim_noise"].squeeze()
+    t_on = dat["t_on"].squeeze()
+    t_off = dat["t_off"].squeeze()
+    presses = np.asarray(dat["key_press"]).ravel()
+
+    noise_mask = (stim_noise >= min_noise) & (stim_noise <= max_noise)
+
+    if not noise_mask.any():
+        return np.nan
+
+    cats = stim_cat[noise_mask]
+    ons = t_on[noise_mask]
+    offs = t_off[noise_mask]
+    n_trials = len(cats)
+
+    responded_face = np.array(
+        [np.any((presses >= ons[i]) & (presses <= offs[i])) for i in range(n_trials)]
+    )
+
+    is_face = cats == 2
+    is_house = cats == 1
+    correct = (is_face & responded_face) | (is_house & ~responded_face)
+
+    return correct.sum() / n_trials
 
 
-# Print the accuracy for each patient
+# test across patients
 for patient in range(7):
-    accuracy = calculate_accuracy(patient)
-    print(f"Patient {patient}: {accuracy:.2f}")
+    acc = calculate_accuracy(patient)
+    print(f"Patient {patient}: {acc*100:5.1f}%")
