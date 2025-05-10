@@ -39,11 +39,4 @@ def calculate_base_accuracy(
     return correct.sum() / n_trials
 
 
-def print_base_accuracies() -> None:
-    # test across patients
-    for patient in range(7):
-        acc = calculate_base_accuracy(patient)
-        print(f"Patient {patient}: {acc*100:5.1f}%")
-
-
 # print_base_accuracies()
