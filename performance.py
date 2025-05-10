@@ -2,7 +2,7 @@ import numpy as np
 import data
 
 
-def calculate_accuracy(
+def calculate_base_accuracy(
     patient: int, min_noise: float = 0, max_noise: float = 100
 ) -> float:
     """
@@ -39,7 +39,11 @@ def calculate_accuracy(
     return correct.sum() / n_trials
 
 
-# test across patients
-for patient in range(7):
-    acc = calculate_accuracy(patient)
-    print(f"Patient {patient}: {acc*100:5.1f}%")
+def print_base_accuracies() -> None:
+    # test across patients
+    for patient in range(7):
+        acc = calculate_base_accuracy(patient)
+        print(f"Patient {patient}: {acc*100:5.1f}%")
+
+
+# print_base_accuracies()

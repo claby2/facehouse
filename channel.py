@@ -20,41 +20,64 @@ def _visualize(dat: np.ndarray) -> None:
     trange = np.arange(-200, 400)
     V_epochs = extract_epochs(dat, trange)
 
-    V_house = (V_epochs[dat["stim_id"] <= 50]).mean(0)
-    V_face = (V_epochs[dat["stim_id"] > 50]).mean(0)
+    # pick the correct category field
+    if "stim_cat" in dat:
+        # exp2: 1=house, 2=face
+        is_house = dat["stim_cat"].squeeze() == 1
+        is_face = dat["stim_cat"].squeeze() == 2
+    else:
+        # exp1: stim_id 1–50 = house, 51–100 = face
+        is_house = dat["stim_id"].squeeze() <= 50
+        is_face = dat["stim_id"].squeeze() > 50
+
+    V_house = V_epochs[is_house].mean(0)
+    V_face = V_epochs[is_face].mean(0)
+
     num_electrodes = V_house.shape[1]
-    assert V_house.shape == V_face.shape
     plt.figure(figsize=(20, 10))
     for j in range(num_electrodes):
         plt.subplot(6, 10, j + 1)
-        plt.plot(trange, V_house[:, j])
-        plt.plot(trange, V_face[:, j])
-        plt.title("ch%d" % j)
+        plt.plot(trange, V_house[:, j], label="house")
+        plt.plot(trange, V_face[:, j], label="face")
+        plt.title(f"ch{j}")
         plt.xticks([-200, 0, 200])
         plt.ylim([0, 4])
+        if j == 0:
+            plt.legend()
+    plt.tight_layout()
     plt.show()
 
 
 def visualize(patient: int, experiment: int) -> None:
     """
-    Visualize the electrode channel activity for a given patient in a given experiment.
-    Activity for houses and faces is shown in different colors.
+    Visualize per‐channel average timecourses for houses vs faces
+    for either experiment.
     """
-    _visualize(data.alldat[patient][experiment])
+    dat = data.alldat[patient][experiment]
+    _visualize(dat)
 
 
 def visualize_channel(patient: int, experiment: int, channel: int) -> None:
-    dat1 = data.alldat[patient][experiment]
-    isort = np.argsort(dat1["stim_id"])
-    V_epochs = extract_epochs(dat1)
-    plt.imshow(
-        V_epochs[isort, :, channel].astype("float32"),
-        aspect="auto",
-        vmax=7,
-        vmin=0,
-        cmap="magma",
-    )
-    plt.colorbar()
+    """
+    Show a heatmap of all trials (sorted by house→face) for one channel.
+    """
+    dat = data.alldat[patient][experiment]
+    V_epochs = extract_epochs(dat)
+
+    # choose the right sort key
+    if "stim_cat" in dat:
+        key = dat["stim_cat"].squeeze()
+    else:
+        key = dat["stim_id"].squeeze()
+
+    isort = np.argsort(key)
+    mat = V_epochs[isort, :, channel].astype("float32")
+
+    plt.figure(figsize=(6, 8))
+    plt.imshow(mat, aspect="auto", vmin=0, vmax=7, cmap="magma")
+    plt.xlabel("Time (samples relative to onset)")
+    plt.ylabel("Sorted trials (house→face)")
+    plt.colorbar(label="Normalized power")
     plt.show()
 
 
@@ -133,11 +156,15 @@ def identify_selective(patient: int, experiment: int) -> int:
     return int(np.argmax(dps))
 
 
-# For each patient, print the most selective channel for both experiments
-# Ideally, these should be the same...
-for patient in range(7):
-    print(f"Patient {patient}:")
-    exp1 = identify_selective(patient, 0)
-    exp2 = identify_selective(patient, 1)
-    print(f"  Experiment 1: {exp1}")
-    print(f"  Experiment 2: {exp2}")
+def print_selective_channels() -> None:
+    # For each patient, print the most selective channel for both experiments
+    # Ideally, these should be the same...
+    for patient in range(7):
+        print(f"Patient {patient}:")
+        exp1 = identify_selective(patient, 0)
+        exp2 = identify_selective(patient, 1)
+        print(f"  Experiment 1: {exp1}")
+        print(f"  Experiment 2: {exp2}")
+
+
+# print_selective_channels()
