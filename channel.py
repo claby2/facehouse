@@ -133,6 +133,8 @@ def identify_selective(patient: int, experiment: int) -> int:
     return int(np.argmax(dps))
 
 
+# For each patient, print the most selective channel for both experiments
+# Ideally, these should be the same...
 for patient in range(7):
     print(f"Patient {patient}:")
     exp1 = identify_selective(patient, 0)
