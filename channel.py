@@ -20,7 +20,6 @@ def _visualize(dat: np.ndarray) -> None:
     trange = np.arange(-200, 400)
     V_epochs = extract_epochs(dat, trange)
 
-    # pick the correct category field
     if "stim_cat" in dat:
         # exp2: 1=house, 2=face
         is_house = dat["stim_cat"].squeeze() == 1
@@ -91,22 +90,17 @@ def compute_selectivity_index(
     Compute a d-prime selectivity index for each channel,
     handling both clean (exp1) and noisy (exp2) data.
     """
-    # 1) epochs: (nTrials, pre+post, nChan)
     trange = np.arange(-pre, post)
     V_epochs = extract_epochs(dat, trange)
-    nTrials, nepoch, nchan = V_epochs.shape
+    _, nepoch, nchan = V_epochs.shape
 
-    # 2) baseline‑correct
     baseline = V_epochs[:, :pre, :].mean(axis=1, keepdims=True)
     V_bc = V_epochs - baseline
 
-    # 3) response window
     if resp_end is None:
         resp_end = nepoch
-    # → (nTrials, nChan)
     resp = V_bc[:, resp_start:resp_end, :].mean(axis=1)
 
-    # 4) pick which trials are houses vs faces
     if noisy:
         mask_house = dat["stim_cat"].squeeze() == 1
         mask_face = dat["stim_cat"].squeeze() == 2
@@ -114,11 +108,9 @@ def compute_selectivity_index(
         mask_house = dat["stim_id"].squeeze() <= 50
         mask_face = dat["stim_id"].squeeze() > 50
 
-    # 5) pull out resp for each condition
-    resp_h = resp[mask_house]  # shape = (#houseTrials, nChan)
-    resp_f = resp[mask_face]  # shape = (#faceTrials,  nChan)
+    resp_h = resp[mask_house]
+    resp_f = resp[mask_face]
 
-    # 6) compute d′ channel by channel
     dprimes = np.zeros(nchan, dtype=np.float32)
     for j in range(nchan):
         xh = resp_h[:, j]
