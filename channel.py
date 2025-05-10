@@ -146,17 +146,3 @@ def identify_selective(patient: int, experiment: int) -> int:
     dat = data.alldat[patient][experiment]
     dps = compute_selectivity_index(dat, noisy=(experiment == 1))
     return int(np.argmax(dps))
-
-
-def print_selective_channels() -> None:
-    # For each patient, print the most selective channel for both experiments
-    # Ideally, these should be the same...
-    for patient in range(7):
-        print(f"Patient {patient}:")
-        exp1 = identify_selective(patient, 0)
-        exp2 = identify_selective(patient, 1)
-        print(f"  Experiment 1: {exp1}")
-        print(f"  Experiment 2: {exp2}")
-
-
-# print_selective_channels()
