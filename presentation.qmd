@@ -1,7 +1,9 @@
 ---
 title: "Does Neural Activity Reflect Face Perception?"
 author: "Ava Fong, Tovi Portnow, Christina Peng, Edward Wibowo"
-format: revealjs
+format:
+    revealjs:
+        theme: serif
 smaller: true
 ---
 
@@ -184,17 +186,78 @@ class BehaviorResponse:
 
 ## Making Our Predictor (Logistic Regression)
 
-TODO
-## Making Our Predictor (Logistic Regression)
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+# Prepare feature matrix and labels
+X = np.array([[r.var, r.auc, r.mean, r.std_1, r.std_2] for r in filtered_behav_responses])
+y = np.array([1 if r.behav == 1 else 0 for r in filtered_behav_responses])
+all_indices = np.arange(len(filtered_behav_responses))
+
+X_train, X_test, y_train, y_test, idx_train, idx_test = train_test_split(X, y, all_indices, test_size=0.2, stratify=y)
+
+clf = LogisticRegression().fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+
+# Plot
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["No Face", "Yes Face"], yticklabels=["No Face", "Yes Face"])
+plt.title("Confusion Matrix - Behavior Prediction")
+plt.xlabel("Neuronal Response Prediction")
+plt.ylabel("True Patient Response")
+plt.show()
+
+#----------------
+# Identifying and print false positives (when Neuronal Response was yes, but patient response was no)
+false_positives = (y_test == 0) & (y_pred == 1)  # predicted behavior, but no actual behavior
+
+false_pos_indices = idx_test[false_positives]  # map back to original data
+
+false_pos_trials = [filtered_behav_responses[i] for i in false_pos_indices]
+
+plot_power_responses(false_pos_trials)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
+
+#----------------------------------------------------------------
+
+# for actual id of the stimulus as opposed to behavior
+X = np.array([[r.var, r.auc, r.mean, r.std_1, r.std_2] for r in filtered_behav_responses])
+y = np.array([1 if r.id == 1 else 0 for r in filtered_behav_responses])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+clf = LogisticRegression().fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred)
+
+# Plot
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Greens", xticklabels=["House", "Face"], yticklabels=["House", "Face"])
+plt.title("Confusion Matrix - Stimulus Prediction")
+plt.xlabel("Neuronal Predicted Response")
+plt.ylabel("Actual Stimulus ID")
+plt.show()
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
+```
 
 ## Confusion Matrices and Regression Results
 #### Is Neuronal Activity a Good Predictor of Behavioral Response? 
 
-TODO
+![](images/matrix1.png)
+
 
 ## Confusion Matrix and Regression Results
 
-TODO
+![](images/matrix2.png)
 
 # Discussion
 
