@@ -8,15 +8,24 @@ smaller: true
 ---
 
 ## Background
+<center>
+{{< video ./videos/Background.mov width="400px">}}
+</center>
 ![](images/paper.png)
 
 ## Main Question
 
+<center>
+{{< video "./videos/Main Question.mov" width="400px">}}
+</center>
 ![](images/map.png)
 
 ## Methods
 
-- Selecitivy Index to Filter (d-prime)
+<center>
+{{< video "./videos/Methods.mov" width="400px">}}
+</center>
+- Selectivity Index to Filter (d-prime)
 - Electrode Isolation
 - Butterworth Filters
 - Logistic Regression (80/20 split)
@@ -25,7 +34,9 @@ smaller: true
 
 ## Selecting Electrodes
 
-{{< video ./videos/edward1.mov width="250px">}}
+<center>
+{{< video ./videos/edward1.mov width="400px">}}
+</center>
 
 ```python
 def compute_selectivity_index(
@@ -71,30 +82,45 @@ def compute_selectivity_index(
 
 ## Selecting Electrodes Visualization
 
-{{< video ./videos/edward2.mov width="250px">}}
-
+<center>
+{{< video ./videos/edward2.mov width="400px">}}
 `visualize_selectivity_index(0, 0)`
-
+</center>
 ![Electrode Visualization](images/electrode_vis.png)
+
+
 
 ##  Selecting Electrodes Channel Visualization
 
+<center>
 :::{layout-ncol=2}
 ![](images/channel35.png){width=250}
 ![](images/channel5.png){width=250}
 :::
-{{< video ./videos/edward3.mov width="250px">}}
+</center>
+<center>
+{{< video ./videos/edward3.mov width="400px">}}
+</center>
 
 ##  Visualizing Trial Data
 
+<center>
+{{< video "./videos/Visualizing Trial Data.mov" width="200px">}}
+</center>
 ![Trial Data](images/trial_data.png)
 
 ##  Violin Plot Using Mean Voltage
 
+<center>
+{{< video "./videos/Violin Plots Using Mean Voltage .mov" width="200px">}}
+</center>
 ![Violin Plots](images/violin_plots.png)
 
 ## Using More Features of The Signal (AUC, Var)
 
+<center>
+{{< video "./videos/Using More Features of The Signal (AUC, Var).mov" width="200px">}}
+</center>
 ```python
 # Plotting 3D Response Space for Experiment #1:
 import plotly.graph_objects as go
@@ -160,6 +186,10 @@ make_3d_plotly_plot(cleaned_responses)
 
 ## Finalized Trial Data Types
 
+<center>
+{{< video "./videos/Finalized Trial Data Types.mov" width="350px">}}
+</center>
+
 ```python
 @dataclass
 class PowerResponse:
@@ -185,6 +215,10 @@ class BehaviorResponse:
 ```
 
 ## Making Our Predictor (Logistic Regression)
+
+<center>
+{{< video "./videos/Making Our Predictor (Logistic Regression).mov" width="200px">}}
+</center>
 
 ```python
 from sklearn.linear_model import LogisticRegression
@@ -252,12 +286,16 @@ print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
 ## Confusion Matrices and Regression Results
 #### Is Neuronal Activity a Good Predictor of Behavioral Response? 
 
+{{< video "./videos/Confusion Matrices and Regression Results–is Neuronal Activity a Good Predictor of Behavioral Response_ .mov" width="200px">}}
+
 ![](images/matrix1.png)
 
 
 ## Confusion Matrix and Regression Results
+{{< video "./videos/Confusion Matrix and Regression Results.mov" width="200px">}}
 
 ![](images/matrix2.png)
+
 
 # Discussion
 
@@ -266,6 +304,10 @@ print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
 - Only one electrode analyzed.
 - ~40% of face trials excluded due to lack of response (possible noise).
 - Noise impact on face vs. house perception remains unexplored.
+<center>
+{{< video "./videos/Discussion_Limitations.mov" width="400px">}}
+</center>
+
 
 ## Discussion: Future Directions
 - Only one electrode analyzed; multi-electrode analysis may improve predictions.
@@ -274,7 +316,9 @@ print("Confusion matrix:\n", confusion_matrix(y_test, y_pred))
 - Factors: decision confidence, unrelated brain activity, pathology.
 - Explore training to enhance neural-behavioral prediction.
 - Study changes in neural/behavioral responses during object learning.
-
+<center>
+{{< video "./videos/Discussion_Future_Directions.mov" width="400px">}}
+</center>
 
 ## Citation
 
