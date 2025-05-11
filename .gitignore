@@ -10,3 +10,6 @@ wheels/
 .venv
 
 faceshouses.npz
+presentation_files
+videos
+presentation.html

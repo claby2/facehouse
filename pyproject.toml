@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "jupyter>=1.1.1",
     "matplotlib>=3.9.4",
     "nilearn>=0.11.1",
     "nimare>=0.5.0",

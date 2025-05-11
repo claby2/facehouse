@@ -1,0 +1,222 @@
+---
+title: "Does Neural Activity Reflect Face Perception?"
+author: "Ava Fong, Tovi Portnow, Christina Peng, Edward Wibowo"
+format: revealjs
+smaller: true
+---
+
+## Background
+![](images/paper.png)
+
+## Main Question
+
+![](images/map.png)
+
+## Methods
+
+- Selecitivy Index to Filter (d-prime)
+- Electrode Isolation
+- Butterworth Filters
+- Logistic Regression (80/20 split)
+
+# Results
+
+## Selecting Electrodes
+
+{{< video ./videos/edward1.mov width="250px">}}
+
+```python
+def compute_selectivity_index(
+    dat, noisy=False, pre=200, post=400, resp_start=400, resp_end=None
+):
+    """
+    Compute a d-prime selectivity index for each channel,
+    handling both clean (exp1) and noisy (exp2) data.
+    """
+    trange = np.arange(-pre, post)
+    V_epochs = extract_epochs(dat, trange)
+    _, nepoch, nchan = V_epochs.shape
+
+    baseline = V_epochs[:, :pre, :].mean(axis=1, keepdims=True)
+    V_bc = V_epochs - baseline
+
+    if resp_end is None:
+        resp_end = nepoch
+    resp = V_bc[:, resp_start:resp_end, :].mean(axis=1)
+
+    if noisy:
+        mask_house = dat["stim_cat"].squeeze() == 1
+        mask_face = dat["stim_cat"].squeeze() == 2
+    else:
+        mask_house = dat["stim_id"].squeeze() <= 50
+        mask_face = dat["stim_id"].squeeze() > 50
+
+    resp_h = resp[mask_house]
+    resp_f = resp[mask_face]
+
+    dprimes = np.zeros(nchan, dtype=np.float32)
+    for j in range(nchan):
+        xh = resp_h[:, j]
+        xf = resp_f[:, j]
+
+        mu_h, mu_f = xh.mean(), xf.mean()
+        var_h, var_f = xh.var(ddof=1), xf.var(ddof=1)
+        denom = np.sqrt(0.5 * (var_h + var_f))
+        dprimes[j] = (mu_f - mu_h) / denom if denom > 0 else np.nan
+
+    return dprimes
+```
+
+## Selecting Electrodes Visualization
+
+{{< video ./videos/edward2.mov width="250px">}}
+
+`visualize_selectivity_index(0, 0)`
+
+![Electrode Visualization](images/electrode_vis.png)
+
+##  Selecting Electrodes Channel Visualization
+
+:::{layout-ncol=2}
+![](images/channel35.png){width=250}
+![](images/channel5.png){width=250}
+:::
+{{< video ./videos/edward3.mov width="250px">}}
+
+##  Visualizing Trial Data
+
+![Trial Data](images/trial_data.png)
+
+##  Violin Plot Using Mean Voltage
+
+![Violin Plots](images/violin_plots.png)
+
+## Using More Features of The Signal (AUC, Var)
+
+```python
+# Plotting 3D Response Space for Experiment #1:
+import plotly.graph_objects as go
+
+def make_3d_plotly_plot(responses: list[PowerResponse]) -> None:
+    # Separate data by stimulus type
+    face_responses = [r for r in responses if r.id == 'face']
+    house_responses = [r for r in responses if r.id == 'house']
+
+    # Extract coordinates
+    def extract_coords(resp_list):
+        return (
+            [r.var for r in resp_list],  # x: variance
+            [r.auc for r in resp_list],  # y: AUC
+            [r.mean for r in resp_list]   # z: max power
+        )
+
+    x_face, y_face, z_face = extract_coords(face_responses)
+    x_house, y_house, z_house = extract_coords(house_responses)
+
+    fig = go.Figure()
+
+    # Face points
+    fig.add_trace(go.Scatter3d(
+        x=x_face, y=y_face, z=z_face,
+        mode='markers',
+        marker=dict(size=3, color='orange'),
+        name='Face'
+    ))
+
+    # House points
+    fig.add_trace(go.Scatter3d(
+        x=x_house, y=y_house, z=z_house,
+        mode='markers',
+        marker=dict(size=3, color='blue'),
+        name='House'
+    ))
+
+    fig.update_layout(
+        title="Interactive 3D Feature Space: Face vs. House Trials, Exp #1",
+        scene=dict(
+            xaxis_title='Variance (200–400 samples)',
+            yaxis_title='AUC (200–400 samples)',
+            zaxis_title='Mean Power (V^2)',
+        ),
+        legend=dict(x=0.02, y=0.98),
+        margin=dict(l=0, r=0, b=0, t=30)
+    )
+
+    fig.show()
+def remove_outliers_hard(responses: list[PowerResponse], auc_limit=1500, var_limit=10) -> list[PowerResponse]:
+    return [r for r in responses if r.auc <= auc_limit and r.var <= var_limit]
+
+cleaned_responses = remove_outliers_hard(total_responses)
+
+make_3d_plotly_plot(cleaned_responses)
+```
+
+## 3D Visualization of Experiment #1 Trial Data
+#### Using Mean, Variance and Area Under Curve for 200-400 Sample Range:
+
+![3D Visualization](images/3d.png)
+
+## Finalized Trial Data Types
+
+```python
+@dataclass
+class PowerResponse:
+    id: str # can be 'face' or 'house'
+    power: np.array # power values across the 400 samples
+    var: float # variance of the response from 200-400 samples
+    auc: float # area under the curve
+    std_1: float # standard deviation of the first derivative
+    std_2: float # standard deviation of the second derivative
+    mean: float # mean response in the trial
+
+@dataclass
+class BehaviorResponse:
+    patient: int # patient ID (0–6)
+    id: int # can be 'face' or 'house' denotes the actual stimulus id
+    power: np.array # the max power of that trial
+    var: float # variance of the response from 200-400 samples
+    auc: float # area under the curve
+    std_1: float # standard deviation of the first derivative
+    std_2: float # standard deviation of the second derivative
+    mean: float # mean power of that trial
+    behav: int # 1 if face was identified, 0 otherwis
+```
+
+## Making Our Predictor (Logistic Regression)
+
+TODO
+## Making Our Predictor (Logistic Regression)
+
+## Confusion Matrices and Regression Results
+#### Is Neuronal Activity a Good Predictor of Behavioral Response? 
+
+TODO
+
+## Confusion Matrix and Regression Results
+
+TODO
+
+# Discussion
+
+## Discussion Limitations
+- Data from epileptic patients; epilepsy may affect results.
+- Only one electrode analyzed.
+- ~40% of face trials excluded due to lack of response (possible noise).
+- Noise impact on face vs. house perception remains unexplored.
+
+## Discussion: Future Directions
+- Only one electrode analyzed; multi-electrode analysis may improve predictions.
+- Individual differences in neural-behavioral link remain unexplored.
+- Need to study why neural activity sometimes fails to predict behavior.
+- Factors: decision confidence, unrelated brain activity, pathology.
+- Explore training to enhance neural-behavioral prediction.
+- Study changes in neural/behavioral responses during object learning.
+
+
+## Citation
+
+```
+Project Template from Neuromatch Academy: https://compneuro.neuromatch.io/projects/docs/project_templates.html#does-neural-activity-reflect-face-perception 
+Data from EcoG datasets Miller 2019
+Miller, Kai J., et al. "Face percept formation in human ventral temporal cortex." Journal of neurophysiology 118.5 (2017): 2614-2627.
+```
